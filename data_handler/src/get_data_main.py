@@ -53,11 +53,11 @@ def convert_data_model_to_timeseries(vehicle_data:Vehicle, sensor_list: list[Sen
         sensor_list_data_to_save[f"Sensor {i} MAC"] = sensor.mac_address,
     
         if isinstance(sensor_data, TemperatureSensorAPIResponse):
-            sensor_list_data_to_save["Sensor Type"] = "Temperature",
-            sensor_list_data_to_save["Ambient Temp."] = sensor_data.sensors[0].ambient_temperature
+            sensor_list_data_to_save[f"Sensor {i} Type"] = "Temperature",
+            sensor_list_data_to_save["Ambient Temp."] = sensor_data.sensors[0].ambient_temperature * 0.001 * (9/5) + 32 # millicelcius -> Farenheit
             sensor_list_data_to_save["Ambient Temp. Timestamp"] = sensor_data.sensors[0].ambient_temperature_time.strftime("%Y-%m-%d %H:%M")
         else:
-            sensor_list_data_to_save["Sensor Type"] = "Door",
+            sensor_list_data_to_save[f"Sensor {i} Type"] = "Door",
             sensor_list_data_to_save["Door State"] = sensor_data.sensors[0].door_closed
             sensor_list_data_to_save["Door State Timestamp"] = sensor_data.sensors[0].door_status_time.strftime("%Y-%m-%d %H:%M")
 
@@ -76,12 +76,12 @@ def update_data_warehouse(row_data_df: pd.DataFrame) -> None:
     if not os.path.exists(LOCAL_TIME_SERIES_STORAGE_FILE):
         row_data_df.to_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, engine='pyarrow', index=True, compression="snappy")
     else:
-        timeseries_df = pd.read_parquet(LOCAL_TIME_SERIES_STORAGE_FILE)
+        timeseries_df = pd.read_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, dtype_backend="pyarrow")
         timeseries_df_updated = pd.concat([timeseries_df, row_data_df])
         timeseries_df_updated.sort_index(inplace=True)
+        for col in timeseries_df_updated.select_dtypes(include=["object"]).columns:
+            timeseries_df_updated[col] = timeseries_df_updated[col].astype(str)
         timeseries_df_updated.to_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, engine='pyarrow', index=True, compression="snappy")
-
-
     print(f"[MAIN] Local timeseries updated.")
 
 def main():

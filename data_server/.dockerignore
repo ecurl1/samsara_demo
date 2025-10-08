@@ -1,0 +1,16 @@
+# === ignore directories ===
+.git
+.gitignore
+.dockerignore
+__pycache__
+.venv
+venv
+dist
+build
+*.egg-info/
+
+# === ignore files ===
+*.pyc
+*.log
+.DS_store
+.vscode

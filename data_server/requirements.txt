@@ -1,0 +1,8 @@
+# nothing special needed here yet
+httpx
+asyncio
+pydantic
+pandas
+pyarrow
+plotly
+flask
