@@ -20,5 +20,3 @@ class SamsaraEndpoints:
 class SensorSerialNums:
     TEMP: str = "W7NP-RJ8-6VE"
     DOOR: str = "WM5D-K78-KN7"
-
-

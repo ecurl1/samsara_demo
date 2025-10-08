@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """This file handles loading api token from the container."""
 from __future__ import annotations
-from src.data_model import Vehicle, Sensor, GroupedSensor, GroupedTemperatureSensor, GroupedDoorSensor
+from src.data_model import Vehicle, Sensor, GroupedTemperatureSensor, GroupedDoorSensor
 from src.constants import SamsaraEndpoints, SensorSerialNums, API_TOKEN_LOCATION
 from pydantic import BaseModel, Field
 from typing import Any
