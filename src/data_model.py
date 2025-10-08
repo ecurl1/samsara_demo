@@ -3,7 +3,7 @@
 
 from pydantic import BaseModel, Field
 from typing import Optional
-
+from datetime import datetime
 
 # === Vehicle Request Response Data Models ===
 class TemperatureSensor(BaseModel):
@@ -50,4 +50,23 @@ class Vehicle(BaseModel):
     externalIds: ExternalIds
     gateway: Gateway
     sensorConfiguration: SensorConfiguration
+
+# === Sensor Request Response Data Models ===
+class Sensor(BaseModel):
+    id: int
+    name: str
+    mac_address: str = Field(alias="macAddress")
+
+class GroupedSensor(BaseModel):
+    id: int
+    name: str
+    vehicle_id: int = Field(alias="vehicleId")
+
+class GroupedTemperatureSensor(GroupedSensor):
+    ambient_temperature: int = Field(alias="ambientTemperature")
+    ambient_temperature_time: datetime = Field(alias="ambientTemperatureTime")
+
+class GroupedDoorSensor(GroupedSensor):
+    door_closed: bool = Field(alias="doorClosed")
+    door_status_time: datetime = Field(alias="doorStatusTime")
 

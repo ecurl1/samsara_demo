@@ -2,3 +2,5 @@
 httpx
 asyncio
 pydantic
+pandas
+pyarrow
