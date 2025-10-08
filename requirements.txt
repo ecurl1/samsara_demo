@@ -1,1 +1,4 @@
 # nothing special needed here yet
+httpx
+asyncio
+pydantic
