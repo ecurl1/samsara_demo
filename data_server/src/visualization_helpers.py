@@ -5,7 +5,36 @@ from plotly.graph_objects import Figure
 from src.constants import TimeseriesKeys
 from constants import LOCAL_TIME_SERIES_STORAGE_FILE
 import pandas as pd
+import numpy as np
 
+def clean_str(text: str) -> str:
+    """Removes artifacts from json serialization."""
+    chars_to_remove = ", '\"[]"
+    translation_table = str.maketrans('', '', chars_to_remove)
+    return text.translate(translation_table)
+    
+
+def parse_header_info(timeseries_df: pd.DataFrame) -> dict:
+    """Parse some header info from the timeseries data."""
+    
+    # get vehicle data
+    header_info = {
+    TimeseriesKeys.MAKE: timeseries_df[TimeseriesKeys.MAKE].iloc[0],
+    TimeseriesKeys.MODEL: timeseries_df[TimeseriesKeys.MODEL].iloc[0],
+    TimeseriesKeys.YEAR: timeseries_df[TimeseriesKeys.YEAR].iloc[0],
+    }
+    # get sensor data
+    num_sensors = sum(1 for col in timeseries_df.columns if "Sensor" in col and "ID" in col)
+    header_info["Sensors"] = {}
+    for i in range(num_sensors):
+        sensor_dict={
+            "Sensor ID": clean_str(str(timeseries_df[f"Sensor {i} ID"].iloc[0])),
+            "Serial Number": clean_str(timeseries_df[f"Sensor {i} Name"].iloc[0]),
+            "MAC Address": clean_str(timeseries_df[f"Sensor {i} MAC"].iloc[0]),
+        }
+        header_info["Sensors"][clean_str(timeseries_df[f"Sensor {i} Type"].iloc[0])] = sensor_dict
+        
+    return header_info
 
 def load_data() -> pd.DataFrame:
     """Get the locally stored timeseries data from fetch data events."""

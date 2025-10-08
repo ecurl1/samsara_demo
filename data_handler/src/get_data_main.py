@@ -76,12 +76,12 @@ def update_data_warehouse(row_data_df: pd.DataFrame) -> None:
     if not os.path.exists(LOCAL_TIME_SERIES_STORAGE_FILE):
         row_data_df.to_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, engine='pyarrow', index=True, compression="snappy")
     else:
-        timeseries_df = pd.read_parquet(LOCAL_TIME_SERIES_STORAGE_FILE)
+        timeseries_df = pd.read_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, dtype_backend="pyarrow")
         timeseries_df_updated = pd.concat([timeseries_df, row_data_df])
         timeseries_df_updated.sort_index(inplace=True)
+        for col in timeseries_df_updated.select_dtypes(include=["object"]).columns:
+            timeseries_df_updated[col] = timeseries_df_updated[col].astype(str)
         timeseries_df_updated.to_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, engine='pyarrow', index=True, compression="snappy")
-
-
     print(f"[MAIN] Local timeseries updated.")
 
 def main():

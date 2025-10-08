@@ -44,3 +44,88 @@ hr {
     background-color: #3C4B5E; /* Darker line for separation */
     margin: 40px 0;
 }
+/* METADATA HEADER STYLES */
+.header-info-header {
+    display: flex; /* Use flexbox to arrange items horizontally */
+    justify-content: space-around; /* Space items out evenly */
+    align-items: center;
+    
+    /* Styling */
+    background-color: #2D3E50; /* Slightly lighter background than body */
+    padding: 15px 10px;
+    border-radius: 8px;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.header-info-item {
+    /* Ensures items are separated and centered */
+    padding: 0 15px; 
+    text-align: center;
+}
+.header-info-inner-item {
+    /* Ensures items are separated and centered */
+    padding: 0 15px; 
+    text-align: center;
+}
+
+.header-info-key {
+    display: block; /* Forces the label onto its own line */
+    font-weight: 500;
+    color: #A9B7C6; /* Muted color for the label */
+    font-size: 0.9em;
+    margin-bottom: 3px;
+}
+
+.header-info-value {
+    display: block;
+    font-weight: 700;
+    color: #5AC8FA; /* Accent color for the actual value */
+    font-size: 1.1em;
+}
+
+header-/* STYLES FOR THE NESTED GROUP CONTAINER */
+.nested-group {
+    /* Use a light border or different background to visually separate it */
+    border-left: 2px solid #5AC8FA; /* Accent color border */
+    padding-left: 10px;
+    margin: 0 15px;
+    /* Since we're using flexbox on the parent, this item still aligns horizontally */
+}
+
+/* STYLE FOR THE NESTED GROUP TITLE */
+.header-info-outer-key-group {
+    /* Style the title (e.g., "Integration Status Details") */
+    display: block; 
+    font-weight: 1000;
+    color: #ccd7e2; /* Slightly lighter color */
+    font-size: 1.2em;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    text-align: left; 
+}
+
+.header-info-inner-key-group {
+    /* Style the title (e.g., "Integration Status Details") */
+    display: block; 
+    font-weight: 600;
+    color: #A9B7C6; /* Slightly lighter color */
+    font-size: 0.9em;
+    padding-bottom: 5px;
+    margin-bottom: 5px;
+    text-align: left; /* Center the title */
+    border-bottom: 1px dashed #3C4B5E; /* Subtle separator line */
+}
+
+/* OPTIONAL: Mute the text inside the nested group */
+.nested-group .header-info-key {
+    /* Make the keys slightly dimmer */
+    color: #92A0AD; 
+    font-weight: 300;
+}
+
+.nested-group .header-info-value {
+    /* Make the values slightly smaller or less bold */
+    font-size: 1em;
+    font-weight: 500;
+}
