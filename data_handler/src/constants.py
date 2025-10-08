@@ -4,8 +4,8 @@
 from typing import Final
 
 # location where the api token is loaded from local to container
-API_TOKEN_LOCATION: Final = "/demo/secrets/api_token.txt"
-LOCAL_TIME_SERIES_STORAGE_FILE: Final = "/demo/secrets/sensor_data.parquet"
+API_TOKEN_LOCATION: Final = "/data_handler/secrets/api_token.txt"
+LOCAL_TIME_SERIES_STORAGE_FILE: Final = "/data_handler/data/sensor_data.parquet"
 # some type definitions for different samsara api integrations
 class SamsaraEndpoints:
     FLEET: str = "fleet"

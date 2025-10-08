@@ -1,16 +1,16 @@
 #!/bin/bash
 
 # some configuration - make sure docker is on path, define image and 
-cd /home/ecurl/samsara_demo/
+cd /home/ecurl/samsara_demo/data_handler
 export PATH="/snap/bin:$PATH"
-IMAGE_NAME="sensor-demo"
-CONTAINER_NAME="samsara-demo"
-TAG="v1"
+IMAGE_NAME="data-handler-demo"
+CONTAINER_NAME="data-handler-demo"
+TAG="v3"
 
 # api token configuration - /secrets is ignored by docker and git, only available locally
 HOST_SECRET_DIR=$(pwd)/secrets
 HOST_SECRET_FILE=$HOST_SECRET_DIR/api_token.txt
-CONTAINER_SECRET_FILE=/demo/secrets/api_token.txt
+CONTAINER_SECRET_FILE=/data_handler/secrets/api_token.txt
 
 # remove old container if present
 echo "[BUILD] Cleaning up $CONTAINER_NAME..."
@@ -31,7 +31,7 @@ fi
 docker run \
     --name "$CONTAINER_NAME" \
     -v "$HOST_SECRET_FILE:$CONTAINER_SECRET_FILE:ro" \
-    -v $(pwd)/secrets:/demo/secrets \
+    -v /home/ecurl/samsara_demo/data:/data_handler/data \
     "$IMAGE_NAME:$TAG" \
 
 # cleanup after run finished

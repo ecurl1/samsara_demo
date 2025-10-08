@@ -1,7 +1,7 @@
 # ignore these directories
-/build/
 /venv/
 *.pyc
 
 # === Secret Management ===
-/secrets/
+/data_handler/secrets/
+/data

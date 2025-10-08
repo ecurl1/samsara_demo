@@ -6,14 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # set local project directory - define working directory in container
-WORKDIR /samsara_demo
-COPY . /samsara_demo
-ENV PYTHONPATH="/samsara_demo"
+WORKDIR /data_handler
+COPY . /data_handler
+ENV PYTHONPATH="/data_handler"
 
 # install some dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # command to run the demo
-CMD ["python", "src/demo.py"]
+CMD ["python", "src/get_data_main.py"]
 
