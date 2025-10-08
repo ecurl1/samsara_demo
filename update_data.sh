@@ -30,6 +30,7 @@ fi
 docker run \
     --name "$CONTAINER_NAME" \
     -v "$HOST_SECRET_FILE:$CONTAINER_SECRET_FILE:ro" \
+    -v $(pwd)/secrets:/demo/secrets \
     "$IMAGE_NAME:$TAG" \
 
 # cleanup after run finished
