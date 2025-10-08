@@ -1,0 +1,7 @@
+# ignore these directories
+/build/
+/venv/
+*.pyc
+
+# === Secret Management ===
+/secrets/
