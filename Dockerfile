@@ -5,16 +5,15 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# set project directory
-WORKDIR /home/ecurl/samsara_demo
+# set local project directory - define working directory in container
+WORKDIR /samsara_demo
+COPY . /samsara_demo
+ENV PYTHONPATH="/samsara_demo"
 
 # install some dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# copy application source code
-COPY . .
-
 # command to run the demo
-CMD ["python", "demo.py"]
+CMD ["python", "src/demo.py"]
 

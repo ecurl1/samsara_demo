@@ -4,12 +4,12 @@
 export PATH="/snap/bin:$PATH"
 IMAGE_NAME="sensor-demo"
 CONTAINER_NAME="samsara-demo"
-TAG="v0"
+TAG="v1"
 
 # api token configuration - /secrets is ignored by docker and git, only available locally
 HOST_SECRET_DIR=$(pwd)/secrets
 HOST_SECRET_FILE=$HOST_SECRET_DIR/api_token.txt
-CONTAINER_SECRET_FILE=/app/run/api_token.txt
+CONTAINER_SECRET_FILE=/demo/secrets/api_token.txt
 
 # remove old container if present
 echo "[BUILD] Cleaning up $CONTAINER_NAME..."
@@ -30,7 +30,7 @@ fi
 docker run \
     --name "$CONTAINER_NAME" \
     -v "$HOST_SECRET_FILE:$CONTAINER_SECRET_FILE:ro" \
-    "$IMAGE_NAME:$TAG"
+    "$IMAGE_NAME:$TAG" \
 
 # cleanup after run finished
 echo "[BUILD] Container finished, removing instance $CONTAINER_NAME..."
