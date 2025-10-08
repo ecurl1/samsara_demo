@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # some configuration - make sure docker is on path, define image and 
+cd /home/ecurl/samsara_demo/
 export PATH="/snap/bin:$PATH"
 IMAGE_NAME="sensor-demo"
 CONTAINER_NAME="samsara-demo"

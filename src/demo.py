@@ -5,9 +5,11 @@ from __future__ import annotations
 from src.api_handler import URLRequestHandler, VehicleAPIResponse, SensorListAPIResponse, TemperatureSensorAPIResponse, DoorSensorAPIResponse
 from src.constants import SamsaraEndpoints
 from src.data_model import Vehicle, Sensor
-from constants import LOCAL_TIME_SERIES_STORAGE
+from constants import LOCAL_TIME_SERIES_STORAGE_FILE
 import os
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import asyncio
 
 def get_vehicle_data() -> VehicleAPIResponse | None:
@@ -53,18 +55,17 @@ def convert_data_model_to_timeseries(vehicle_data:Vehicle, sensor_list: list[Sen
         if isinstance(sensor_data, TemperatureSensorAPIResponse):
             sensor_list_data_to_save["Sensor Type"] = "Temperature",
             sensor_list_data_to_save["Ambient Temp."] = sensor_data.sensors[0].ambient_temperature
-            sensor_list_data_to_save["Timestamp"] = sensor_data.sensors[0].ambient_temperature_time.strftime("%Y-%m-%d %H:%M")
+            sensor_list_data_to_save["Ambient Temp. Timestamp"] = sensor_data.sensors[0].ambient_temperature_time.strftime("%Y-%m-%d %H:%M")
         else:
             sensor_list_data_to_save["Sensor Type"] = "Door",
             sensor_list_data_to_save["Door State"] = sensor_data.sensors[0].door_closed
-            sensor_list_data_to_save["Timestamp"] = sensor_data.sensors[0].door_status_time.strftime("%Y-%m-%d %H:%M")
+            sensor_list_data_to_save["Door State Timestamp"] = sensor_data.sensors[0].door_status_time.strftime("%Y-%m-%d %H:%M")
 
     # convert data dictionaries into dataframes, concatenate and return
     vehicle_df = pd.DataFrame([vehicle_data_to_save])
     sensor_df = pd.DataFrame([sensor_list_data_to_save])
 
-    final_row_df = pd.concat([vehicle_df, sensor_df], ignore_index=True)
-    final_row_df.set_index("Timestamp", inplace=True)
+    final_row_df = pd.concat([vehicle_df, sensor_df], axis=1, ignore_index=False)
     final_row_df.sort_index(inplace=True)
 
     return final_row_df
@@ -72,10 +73,14 @@ def convert_data_model_to_timeseries(vehicle_data:Vehicle, sensor_list: list[Sen
 def update_data_warehouse(row_data_df: pd.DataFrame) -> None:
     """Create and/or save timeseries data to storage."""
 
-    if not os.path.exists(LOCAL_TIME_SERIES_STORAGE):
-        row_data_df.to_parquet(LOCAL_TIME_SERIES_STORAGE, engine='pyarrow', index=True)
+    if not os.path.exists(LOCAL_TIME_SERIES_STORAGE_FILE):
+        row_data_df.to_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, engine='pyarrow', index=True, compression="snappy")
     else:
-        row_data_df.to_parquet(LOCAL_TIME_SERIES_STORAGE, engine='pyarrow', index=True, append=True)
+        timeseries_df = pd.read_parquet(LOCAL_TIME_SERIES_STORAGE_FILE)
+        timeseries_df_updated = pd.concat([timeseries_df, row_data_df])
+        timeseries_df_updated.sort_index(inplace=True)
+        timeseries_df_updated.to_parquet(LOCAL_TIME_SERIES_STORAGE_FILE, engine='pyarrow', index=True, compression="snappy")
+
 
     print(f"[MAIN] Local timeseries updated.")
 
