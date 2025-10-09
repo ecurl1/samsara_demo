@@ -2,6 +2,11 @@
 """Main entry point for the script."""
 
 from __future__ import annotations
+import os
+import pandas as pd
+import asyncio
+import argparse
+from typing import Any
 from src.api_handler import (
     URLRequestHandler, 
     VehicleAPIResponse, 
@@ -13,13 +18,8 @@ from src.api_handler import (
 from src.constants import SamsaraEndpoints, SensorSerialNums
 from src.data_model import Vehicle, Sensor
 from constants import LOCAL_TIME_SERIES_STORAGE_FILE, LOCAL_HISTORY_TIME_SERIES_STORAGE_FILE
-import os
-import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
-import asyncio
-import argparse
-from typing import Any
+
+
 
 def get_vehicle_data() -> VehicleAPIResponse | None:
     """Helper function to grab fleet vehicle data."""
@@ -46,6 +46,7 @@ def get_sensor_data(
     return asyncio.run(URLRequestHandler.get_sensor_data(sensor_list_response))
 
 def get_sensor_history_data(sensor_list_response: SensorListAPIResponse, start_time:str, end_time:str) -> dict[str, Any] | None | None:
+    """helper to grab sensor history information for sensors in list."""
     sensor_history_response = asyncio.run(
         URLRequestHandler.get_sensor_history(
         sensor_list_response, start_time=start_time, end_time=end_time
@@ -62,7 +63,7 @@ def convert_data_model_to_timeseries(vehicle_data:Vehicle, sensor_list: list[Sen
         "Year": vehicle_data.year,
         "Gateway SN": vehicle_data.externalIds.serial
     }
-
+    # create sensor dict
     sensor_list_data_to_save = {}
     for i, (sensor, sensor_data) in enumerate(zip(sensor_list, sensor_data_list)):
         sensor_list_data_to_save[f"Sensor {i} ID"] = sensor.id,
@@ -105,7 +106,7 @@ def convert_history_to_timeseries(vehicle_data:Vehicle, sensor_list: list[Sensor
         sensor_list_data_to_save[f"Sensor {i} MAC"] = [sensor.mac_address for _ in range(len_timestamps)]
         sensor_list_data_to_save[f"Sensor {i} Type"] = ["Temperature" if sensor.name == SensorSerialNums.TEMP else "Door" for _ in range(len_timestamps)]
         if sensor.name == SensorSerialNums.TEMP:
-            sensor_list_data_to_save["Ambient Temp."] = [[result.values[i] * 0.001 * (9/5) + 32] for result in sensor_history_data.results] # millicelcius -> Farenheit
+            sensor_list_data_to_save["Ambient Temp."] = [result.values[i] * 0.001 * (9/5) + 32 for result in sensor_history_data.results] # millicelcius -> Farenheit
             sensor_list_data_to_save["Ambient Temp. Timestamp"] = [result.time_ms.strftime("%Y-%m-%d %H:%M") for result in sensor_history_data.results]
         else:
             sensor_list_data_to_save["Door State"] = [result.values[i] for result in sensor_history_data.results]
@@ -176,6 +177,8 @@ def main():
     args = parser.parse_args()
     start_time = args.start_time
     end_time = args.end_time
+    
+    # just use start/end time from GUI to determine run mode for now
     if start_time is not None and end_time is not None:
         # use history function to update data warehouse
         update_data_warehouse_from_time_range(start_time, end_time)
@@ -200,4 +203,5 @@ def main():
 
 
 if __name__ == "__main__":
+    """execute only if run as a script"""
     main()

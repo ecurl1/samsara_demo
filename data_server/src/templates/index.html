@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
   <head>
   <meta charset="UTF-8", http-equiv="refresh", content="3600">
   <title>Asset Returns</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
 </head>
 <body>
     <h1>Samsara Inegration Demo: Asset Time Series Plots</h1>
@@ -52,7 +50,7 @@
     </div>
 
     <h2>Ambient Temperature and Door State Over Time</h2>
-    <form id="time-range-form" method="POST" action="/update_plot">
+    <form id="time-range-form" method="POST" action="/api/update_plot">
         <label for="start_time">Start Time:</label>
         <input type="datetime-local" id="start_time" name="start_time" required 
             value="{{ current_start_time | default('2023-10-01T00:00') }}">
@@ -113,7 +111,50 @@
       {responsive: true}
     );
 
-    
+    document.getElementById('time-range-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Stop the default form submission (page reload)
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch('/api/update_plot', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Parse the new Plotly data
+        const graphJsonTemp = JSON.parse(data.plot_json_temp);
+        const graphJsonDoor = JSON.parse(data.plot_json_door);
+
+        // Re-run the plot combination logic from the previous refactoring
+        var combinedData = [
+            graphJsonTemp.data[0], 
+            graphJsonDoor.data[0]
+        ];
+        combinedData[1].yaxis = 'y2';
+        combinedData[1].line = { shape: 'hv' };
+
+        var combinedLayout = graphJsonTemp.layout;
+        // ... (reconfigure layout properties like yaxis2, hovermode, spikes) ...
+        combinedLayout.yaxis2 = {
+            title: 'Door State (0=Closed, 1=Open)',
+            overlaying: 'y',
+            side: 'right',
+            range: [-0.1, 1.1],
+            tickvals: [0, 1]
+        };
+        combinedLayout.yaxis.title = 'Ambient Temperature (°F)';
+        combinedLayout.title = 'Ambient Temperature vs. Door State';
+        // Use Plotly.react to efficiently update the existing plot
+        Plotly.react('chart-container-combined', combinedData, combinedLayout);
+    })
+    .catch(error => {
+        console.error('Error updating chart:', error);
+        alert('Failed to fetch new data. Check server logs.');
+    });
+    });
   </script>
+    
 </body>
 </html>

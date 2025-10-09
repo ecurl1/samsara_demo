@@ -5,6 +5,14 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    gnupg \
+    # Install the simpler 'docker.io' package and clean up
+    && apt-get install -y docker.io \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # set local project directory - define working directory in container
 WORKDIR /data_server
 COPY . /data_server
