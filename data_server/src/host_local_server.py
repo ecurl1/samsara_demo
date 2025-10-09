@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 from plotly.utils import PlotlyJSONEncoder
 
 import json
-from src.visualization_helpers import load_data, plot_timeseries, parse_header_info
+from src.visualization_helpers import load_data, plot_timeseries, parse_header_info, request_time_range_data
 from src.constants import TEMPLATE_FOLDER
 from src.constants import TimeseriesKeys
 
@@ -31,6 +31,18 @@ def index():
         header_info=header_info
     )
 
+@app.route('/update_plot', methods=['POST'])
+def update_plot():
+    """Function to update the plot data."""
+    # This function can be expanded to fetch new data and update the plot
+    start_time = request.form.get('start_time')+ ":00 "
+    end_time = request.form.get('end_time') + ":00 "
+    
+    # get new data based on the provided time range
+    timeseries_df = request_time_range_data(start_time, end_time)
+    
+    # reloads the local server page data
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

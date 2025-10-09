@@ -7,12 +7,16 @@ from constants import LOCAL_TIME_SERIES_STORAGE_FILE
 import pandas as pd
 import numpy as np
 
+def request_time_range_data(start_time: str, end_time: str) -> pd.DataFrame:
+    command = [
+        
+    ]
+
 def clean_str(text: str) -> str:
     """Removes artifacts from json serialization."""
     chars_to_remove = ", '\"[]"
     translation_table = str.maketrans('', '', chars_to_remove)
     return text.translate(translation_table)
-    
 
 def parse_header_info(timeseries_df: pd.DataFrame) -> dict:
     """Parse some header info from the timeseries data."""

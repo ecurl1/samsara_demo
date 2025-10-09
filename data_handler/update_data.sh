@@ -1,5 +1,22 @@
 #!/bin/bash
 
+# --- Input Handling ---
+START_TIME="$1" # Quote the inputs right away
+END_TIME="$2"   # Quote the inputs right away
+
+# Construct the arguments string for the docker run command
+# Initialize an array for arguments
+DOCKER_ARGS_ARRAY=()
+
+# Append arguments to the array
+if [ -n "$START_TIME" ]; then
+    DOCKER_ARGS_ARRAY+=(--start-time "$START_TIME")
+fi
+if [ -n "$END_TIME" ]; then
+    DOCKER_ARGS_ARRAY+=(--end-time "$END_TIME")
+fi
+# ----------------------
+
 # some configuration - make sure docker is on path, define image and 
 cd /home/ecurl/samsara_demo/data_handler
 export PATH="/snap/bin:$PATH"
@@ -32,9 +49,11 @@ docker run \
     --name "$CONTAINER_NAME" \
     -v "$HOST_SECRET_FILE:$CONTAINER_SECRET_FILE:ro" \
     -v /home/ecurl/samsara_demo/data:/data_handler/data \
+    --entrypoint "python3" \
     "$IMAGE_NAME:$TAG" \
+    /data_handler/src/get_data_main.py \
+    "${DOCKER_ARGS_ARRAY[@]}"
 
 # cleanup after run finished
 echo "[BUILD] Container finished, removing instance $CONTAINER_NAME..."
 docker rm $CONTAINER_NAME
-

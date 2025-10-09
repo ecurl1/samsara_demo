@@ -9,52 +9,61 @@
 </head>
 </head>
 <body>
-  <h1>Samsara Inegration Demo: Asset Time Series Plots</h1>
-  
-  <h2>Vehicle and Sensor Information</h2>
-  <div class="header-info">
-  {% for key, value in header_info.items() %}
+    <h1>Samsara Inegration Demo: Asset Time Series Plots</h1>
     
-    {% if value is mapping %}
-      <div class="nested-group">
-        <span class="header-info-outer-key-group">{{ key }}</span>
+    <h2>Vehicle and Sensor Information</h2>
+    <div class="header-info">
+    {% for key, value in header_info.items() %}
         
-        {% for sub_key, sub_value in value.items() %}
-          
-          {% if sub_value is mapping %}
-            <div class="nested-sub-group">
-              <span class="header-info-inner-key-group">Sensor Type: {{ sub_key }}</span>
-              
-              {% for sub_sub_key, sub_sub_value in sub_value.items() %}
-                <div class="header-info-inner-item">
-                  <span class="header-info-key">{{ sub_sub_key }}:</span>
-                  <span class="header-info-value">{{ sub_sub_value }}</span>
+        {% if value is mapping %}
+        <div class="nested-group">
+            <span class="header-info-outer-key-group">{{ key }}</span>
+            
+            {% for sub_key, sub_value in value.items() %}
+            
+            {% if sub_value is mapping %}
+                <div class="nested-sub-group">
+                <span class="header-info-inner-key-group">Sensor Type: {{ sub_key }}</span>
+                
+                {% for sub_sub_key, sub_sub_value in sub_value.items() %}
+                    <div class="header-info-inner-item">
+                    <span class="header-info-key">{{ sub_sub_key }}:</span>
+                    <span class="header-info-value">{{ sub_sub_value }}</span>
+                    </div>
+                {% endfor %}
+                </div> 
+                {% else %}
+                <div class="header-info-item">
+                <span class="header-info-key">{{ sub_key }}:</span>
+                <span class="header-info-value">{{ sub_value }}</span>
                 </div>
-              {% endfor %}
-            </div> 
-            {% else %}
-            <div class="header-info-item">
-              <span class="header-info-key">{{ sub_key }}:</span>
-              <span class="header-info-value">{{ sub_value }}</span>
-            </div>
-          {% endif %}
-          
-        {% endfor %}
-      </div> 
-      {% else %}
-      <div class="header-info-item">
-        <span class="header-info-key">{{ key }}:</span>
-        <span class="header-info-value">{{ value }}</span>
-      </div>
-    {% endif %}
+            {% endif %}
+            
+            {% endfor %}
+        </div> 
+        {% else %}
+        <div class="header-info-item">
+            <span class="header-info-key">{{ key }}:</span>
+            <span class="header-info-value">{{ value }}</span>
+        </div>
+        {% endif %}
     
-  {% endfor %}
-  </div>
-
-  <hr>
+    {% endfor %}
+    </div>
 
     <h2>Ambient Temperature and Door State Over Time</h2>
-  <div id="chart-container-combined" class="plot-container" style="width:100%; height:450px;"></div>
+    <form id="time-range-form" method="POST" action="/update_plot">
+        <label for="start_time">Start Time:</label>
+        <input type="datetime-local" id="start_time" name="start_time" required 
+            value="{{ current_start_time | default('2023-10-01T00:00') }}">
+
+        <label for="end_time">End Time:</label>
+        <input type="datetime-local" id="end_time" name="end_time" required 
+            value="{{ current_end_time | default('2023-10-02T00:00') }}">
+
+        <button type="submit">Update Chart</button>
+    </form>
+    <div id="chart-container-combined" class="plot-container" style="width:100%; height:450px;"></div>
 
           <script>
     // Get plot data from Flask
@@ -104,6 +113,7 @@
       {responsive: true}
     );
 
+    
   </script>
 </body>
 </html>
