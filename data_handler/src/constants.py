@@ -6,6 +6,8 @@ from typing import Final
 # location where the api token is loaded from local to container
 API_TOKEN_LOCATION: Final = "/data_handler/secrets/api_token.txt"
 LOCAL_TIME_SERIES_STORAGE_FILE: Final = "/data_handler/data/sensor_data.parquet"
+LOCAL_HISTORY_TIME_SERIES_STORAGE_FILE: Final = "/data_handler/data/sensor_history_data.parquet"
+
 # some type definitions for different samsara api integrations
 class SamsaraEndpoints:
     FLEET: str = "fleet"
@@ -15,6 +17,7 @@ class SamsaraEndpoints:
     LIST: str = "list"
     TEMPERATUER: str = "temperature"
     DOOR: str = "door"
+    HISTORY: str = "history"
 
 # keeping track of serial nums here for ease of access
 class SensorSerialNums:

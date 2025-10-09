@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <head>
-    <meta charset="UTF-8", http-equiv="refresh", content="3600">
-    <title>Asset Returns</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-</head>
+  <head>
+  <meta charset="UTF-8", http-equiv="refresh", content="3600">
+  <title>Asset Returns</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <h1>Samsara Inegration Demo: Asset Time Series Plots</h1>
@@ -16,67 +14,147 @@
     {% for key, value in header_info.items() %}
         
         {% if value is mapping %}
-            <div class="nested-group">
-                <span class="header-info-outer-key-group">{{ key }}</span>
+        <div class="nested-group">
+            <span class="header-info-outer-key-group">{{ key }}</span>
+            
+            {% for sub_key, sub_value in value.items() %}
+            
+            {% if sub_value is mapping %}
+                <div class="nested-sub-group">
+                <span class="header-info-inner-key-group">Sensor Type: {{ sub_key }}</span>
                 
-                {% for sub_key, sub_value in value.items() %}
-                    
-                    {% if sub_value is mapping %}
-                        <div class="nested-sub-group">
-                            <span class="header-info-inner-key-group">Sensor Type: {{ sub_key }}</span>
-                            
-                            {% for sub_sub_key, sub_sub_value in sub_value.items() %}
-                                <div class="header-info-inner-item">
-                                    <span class="header-info-key">{{ sub_sub_key }}:</span>
-                                    <span class="header-info-value">{{ sub_sub_value }}</span>
-                                </div>
-                            {% endfor %}
-                        </div> 
-                        {% else %}
-                        <div class="header-info-item">
-                            <span class="header-info-key">{{ sub_key }}:</span>
-                            <span class="header-info-value">{{ sub_value }}</span>
-                        </div>
-                    {% endif %}
-                    
+                {% for sub_sub_key, sub_sub_value in sub_value.items() %}
+                    <div class="header-info-inner-item">
+                    <span class="header-info-key">{{ sub_sub_key }}:</span>
+                    <span class="header-info-value">{{ sub_sub_value }}</span>
+                    </div>
                 {% endfor %}
-            </div> 
-            {% else %}
-            <div class="header-info-item">
-                <span class="header-info-key">{{ key }}:</span>
-                <span class="header-info-value">{{ value }}</span>
-            </div>
+                </div> 
+                {% else %}
+                <div class="header-info-item">
+                <span class="header-info-key">{{ sub_key }}:</span>
+                <span class="header-info-value">{{ sub_value }}</span>
+                </div>
+            {% endif %}
+            
+            {% endfor %}
+        </div> 
+        {% else %}
+        <div class="header-info-item">
+            <span class="header-info-key">{{ key }}:</span>
+            <span class="header-info-value">{{ value }}</span>
+        </div>
         {% endif %}
-        
+    
     {% endfor %}
     </div>
 
-    <hr>
+    <h2>Ambient Temperature and Door State Over Time</h2>
+    <form id="time-range-form" method="POST" action="/api/update_plot">
+        <label for="start_time">Start Time:</label>
+        <input type="datetime-local" id="start_time" name="start_time" required 
+            value="{{ current_start_time | default('2023-10-01T00:00') }}">
 
-    <h2>Ambient Temperature Over Time (F)</h2>
-    <div id="chart-container-temp", class="plot-container", style="width:100%; height:450px;"></div>
+        <label for="end_time">End Time:</label>
+        <input type="datetime-local" id="end_time" name="end_time" required 
+            value="{{ current_end_time | default('2023-10-02T00:00') }}">
 
-    <hr>
-    <h2>Door State Over Time (0=Closed, 1=Open)</h2>
-    <div id="chart-container-door", class="plot-container", style="width:100%; height:450px;"></div>
+        <button type="submit">Update Chart</button>
+    </form>
+    <div id="chart-container-combined" class="plot-container" style="width:100%; height:450px;"></div>
 
-    <script>
-        // get temperature plot data from Flask and plot
-        var graphJsonTemp = JSON.parse('{{ plot_json_temp | safe }}');
-        Plotly.newPlot('chart-container-temp', 
-            graphJsonTemp.data, 
-            graphJsonTemp.layout, 
-            {responsive: true}
-        );
+          <script>
+    // Get plot data from Flask
+    var graphJsonTemp = JSON.parse('{{ plot_json_temp | safe }}');
+    var graphJsonDoor = JSON.parse('{{ plot_json_door | safe }}');
 
-        // get door state plot data from Flask and plot
-        var graphJsonDoor = JSON.parse('{{ plot_json_door | safe }}');
-        Plotly.newPlot('chart-container-door', 
-            graphJsonDoor.data, 
-            graphJsonDoor.layout, 
-            {responsive: true}
-        );
-        
-    </script>
+    // 1. Combine the data arrays
+    var combinedData = [
+      // Temperature data (primary Y-axis)
+      graphJsonTemp.data[0], 
+      // Door state data (secondary Y-axis)
+      graphJsonDoor.data[0]
+    ];
+
+    // 2. Assign the second trace (Door State) to the secondary Y-axis
+    // Note: Plotly's structure suggests each trace is an object in the 'data' array.
+    // Assuming each plot_json contains a single trace at index 0.
+    combinedData[1].yaxis = 'y2';
+    
+    // Set a sensible line shape for the door state, as it's binary
+    combinedData[1].line = { shape: 'hv' }; // 'hv' for step-like plotting
+
+    // 3. Configure the layout for dual axes
+    var combinedLayout = graphJsonTemp.layout; // Start with the temperature layout
+
+    // Add the secondary Y-axis (y2) configuration
+    combinedLayout.yaxis2 = {
+      title: 'Door State (0=Closed, 1=Open)',
+      overlaying: 'y', // Overlay on the primary Y-axis
+      side: 'right',  // Place on the right
+      range: [-0.1, 1.1], // Set a clear range for the 0/1 data
+      tickvals: [0, 1]  // Only show 0 and 1 as ticks
+    };
+
+    // Optionally update the primary Y-axis title for clarity
+    combinedLayout.yaxis.title = 'Ambient Temperature (°F)';
+    
+    // Add a title to the combined plot
+    combinedLayout.title = 'Ambient Temperature vs. Door State';
+
+
+    // 4. Plot the combined data
+    Plotly.newPlot(
+      'chart-container-combined', // New container ID
+      combinedData, 
+      combinedLayout, 
+      {responsive: true}
+    );
+
+    document.getElementById('time-range-form').addEventListener('submit', function(event) {
+    event.preventDefault(); // Stop the default form submission (page reload)
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    fetch('/api/update_plot', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Parse the new Plotly data
+        const graphJsonTemp = JSON.parse(data.plot_json_temp);
+        const graphJsonDoor = JSON.parse(data.plot_json_door);
+
+        // Re-run the plot combination logic from the previous refactoring
+        var combinedData = [
+            graphJsonTemp.data[0], 
+            graphJsonDoor.data[0]
+        ];
+        combinedData[1].yaxis = 'y2';
+        combinedData[1].line = { shape: 'hv' };
+
+        var combinedLayout = graphJsonTemp.layout;
+        // ... (reconfigure layout properties like yaxis2, hovermode, spikes) ...
+        combinedLayout.yaxis2 = {
+            title: 'Door State (0=Closed, 1=Open)',
+            overlaying: 'y',
+            side: 'right',
+            range: [-0.1, 1.1],
+            tickvals: [0, 1]
+        };
+        combinedLayout.yaxis.title = 'Ambient Temperature (°F)';
+        combinedLayout.title = 'Ambient Temperature vs. Door State';
+        // Use Plotly.react to efficiently update the existing plot
+        Plotly.react('chart-container-combined', combinedData, combinedLayout);
+    })
+    .catch(error => {
+        console.error('Error updating chart:', error);
+        alert('Failed to fetch new data. Check server logs.');
+    });
+    });
+  </script>
+    
 </body>
 </html>

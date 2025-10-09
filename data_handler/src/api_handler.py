@@ -6,7 +6,9 @@ from src.constants import SamsaraEndpoints, SensorSerialNums, API_TOKEN_LOCATION
 from pydantic import BaseModel, Field
 from typing import Any
 import httpx
-import json
+from datetime import datetime
+
+INPUT_DATETIME_FORMAT = '%Y-%m-%d %H:%M'
 
  # helper funciton to load secret API token
 def get_api_token() -> str | None:
@@ -17,6 +19,12 @@ def get_api_token() -> str | None:
     except FileNotFoundError as exc:
         print(f"[SETUP ERROR]:{exc} Could not find API token at {API_TOKEN_LOCATION}")
         return None
+
+# helper function to convert datetime to epoch millis
+def _convert_datetime_to_epoch_millis(dt_str: str) -> int:
+    """Convert datetime to millis timestamp."""
+    dt_object = datetime.strptime(dt_str, INPUT_DATETIME_FORMAT)
+    return int(dt_object.timestamp() * 1000)
 
 # === Request Handler ===
 class URLRequestHandler:
@@ -105,7 +113,6 @@ class URLRequestHandler:
         Returns:
             json of requested data, if successful.
         """
-
         sensor_endpoints, sensor_ids = sensor_list_response.parse_sensor_list_response()
 
         sensor_data_responses: list[Any] = []
@@ -143,6 +150,54 @@ class URLRequestHandler:
 
         return output
 
+    @classmethod
+    async def get_sensor_history(
+        cls, sensor_list_response: SensorListAPIResponse, 
+        start_time: str, 
+        end_time: str,
+    ) ->  dict[str, Any] | None | None:
+        """Grab all available within a set time frame sensor data.
+        
+        Returns:
+            json of requested data, if successful.
+        """
+        
+        # parse sensor list response to get sensor ids and types
+        sensor_endpoints, sensor_ids = sensor_list_response.parse_sensor_list_response()
+
+        # construct series payload
+        series_paylod = []
+        for sensor_endpoint, sensor_id in zip(sensor_endpoints, sensor_ids):
+            if sensor_endpoint == SamsaraEndpoints.DOOR:
+                series_paylod.append({"field": "doorClosed", "widgetId": sensor_id})
+            else:
+                series_paylod.append({"field": "ambientTemperature", "widgetId": sensor_id})
+
+        # construct payload for all the sensors within the time range
+        payload = {
+            "fillMissing": "withPrevious",
+            "endMs": _convert_datetime_to_epoch_millis(end_time),
+            "startMs": _convert_datetime_to_epoch_millis(start_time),
+            "stepMs": 1800000, # 30 min intervals
+            "series": series_paylod,
+        }
+        
+        # get url and authorization header
+        request_url = URLRequestHandler.get_request_url([SamsaraEndpoints.V1, SamsaraEndpoints.SENSORS, SamsaraEndpoints.HISTORY])
+        authorization_header = URLRequestHandler.get_authorization_header()
+        async with httpx.AsyncClient(headers=authorization_header) as client:
+            try:
+                response = await client.post(request_url, json=payload)
+                response.raise_for_status()
+                print(f"[REQUEST] Status: {request_url}={response.status_code}")
+                return response.json()
+            except httpx.HTTPStatusError as status_error:
+                print(f"[REQUEST] HTTP error occured: {status_error}")
+                return None
+            except httpx.RequestError as request_error:
+                print(f"[REQUEST] Error occured during request: {request_error}")
+                return None
+
 
 # === API Response Data Models ===
 class BaseAPIResponse(BaseModel):
@@ -177,12 +232,24 @@ class SensorListAPIResponse(BaseAPIResponse):
         ]
         return sensor_endpoints, sensor_ids
 
+
 class DoorSensorAPIResponse(BaseAPIResponse):
     """Wrapper for sensor request response."""
     group_id: int = Field(alias="groupId")
     sensors: list[GroupedDoorSensor]
 
+
 class TemperatureSensorAPIResponse(BaseAPIResponse):
     """Wrapper for sensor request response."""
     group_id: int = Field(alias="groupId")
     sensors: list[GroupedTemperatureSensor]
+
+
+class SeriesData(BaseModel):
+    time_ms: datetime = Field(alias="timeMs")
+    values: list[int] = Field(alias="series")
+
+
+class SensorHistoryAPIResponse(BaseAPIResponse):
+    """Wrapper for sensor history request. Only returns timestamps and values"""
+    results: list[SeriesData] = Field()

@@ -5,9 +5,11 @@ from typing import Final
 
 # where the timeseries data is mounted in the container
 LOCAL_TIME_SERIES_STORAGE_FILE: Final = "/data_server/data/sensor_data.parquet"
+LOCAL_HISTORY_TIME_SERIES_STORAGE_FILE: Final = "/data_server/data/sensor_history_data.parquet"
 
 # flask constants
 TEMPLATE_FOLDER: Final = "/data_server/src/templates"
+HOST_BASE_DIR: Final = "/home/ecurl/samsara_demo"
 
 # define constants for data keys
 class TimeseriesKeys:

@@ -27,7 +27,9 @@ docker run \
     -d \
     -p 8080:5000 \
     --name "$CONTAINER_NAME" \
+    -v /var/run/docker.sock:/var/run/docker.sock \
     -v /home/ecurl/samsara_demo/data:/data_server/data \
+    -v /home/ecurl/samsara_demo/data_handler:/data_handler \
     "$IMAGE_NAME:$TAG" \
 
 # cleanup after run finished
